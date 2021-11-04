@@ -21,7 +21,18 @@ function useBuffer() {
     setBuffer(newBuffer);
   };
 
-  return { buffers, focusPath, focusBuffer, closeBuffer };
+  const addBuffer = (path, type, focus = true) => {
+    for (let i = 0; i < buffers.length; i++) {
+      if (buffers[i].path === path && buffers[i].type === type) return;
+    }
+
+    const newBuffer = [...buffers, { path, type }];
+    setBuffer(newBuffer);
+
+    if (focus) setFocusPath(path);
+  };
+
+  return { buffers, focusPath, focusBuffer, closeBuffer, addBuffer };
 }
 
 export default useBuffer;

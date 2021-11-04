@@ -1,5 +1,7 @@
 import styled from "styled-components/macro";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import useBuffer from "../hook/buffer";
+import { useQuery } from "react-query";
 
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
@@ -10,22 +12,32 @@ const CodeEditor = styled(CodeMirror)`
   font-size: 14px;
 `;
 
-const EXAMPLE_CODE = `const hello = 'world';
+function apiFetcher({ queryKey }) {
+  return fetch(`http://localhost:8080/api/${queryKey[0]}/${queryKey[1]}`).then((res) =>
+    res.text()
+  );
+}
 
-if (hello) {
-	console.log(hello)
-}`;
+function CodeEditorStyled() {
+  const { buffers, focusPath } = useBuffer();
+  const [code, setCode] = useState("");
+  const buffer = buffers.find((buf) => buf.path === focusPath);
 
-function CodeEditorStyled(props) {
-  const [code, setCode] = useState(EXAMPLE_CODE);
+  const { isLoading, error } = useQuery([buffer.type, focusPath], apiFetcher, {
+    onSuccess(data) {
+      setCode(data);
+    },
+  });
 
-  const onCodeChange = ({ target }) => {
-    setCode(target.value);
+  if (isLoading) return "…";
+  if (error) return error;
+
+  const onCodeChange = (code) => {
+    setCode(code);
   };
 
   return (
     <CodeEditor
-      theme="light"
       height="100%"
       extensions={[javascript()]}
       value={code}

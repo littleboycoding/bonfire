@@ -9,7 +9,7 @@ function EditorStyled() {
 
   if (focusPath === null || !buffer) return null;
 
-  if (buffer.type === "scene") return <SceneEditor />;
+  if (buffer.type === "scenes") return <SceneEditor />;
   if (buffer.type === "assets") return <CodeEditor />;
 
   return null;

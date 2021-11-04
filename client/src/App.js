@@ -4,8 +4,11 @@ import Statusbar from "./components/Statusbar";
 import Sidebar from "./components/Sidebar";
 import Tabbar from "./components/Tabbar";
 import Editor from "./components/Editor";
+import { QueryClientProvider, QueryClient } from "react-query";
 
 import { BufferProvider } from "./context/buffer";
+
+const client = new QueryClient();
 
 const Root = styled.div`
   display: grid;
@@ -22,12 +25,14 @@ const Root = styled.div`
 function App() {
   return (
     <Root>
-      <BufferProvider>
-        <Tabbar />
-        <Editor />
-        <Sidebar />
-        <Statusbar />
-      </BufferProvider>
+      <QueryClientProvider client={client}>
+        <BufferProvider>
+          <Tabbar />
+          <Editor />
+          <Sidebar />
+          <Statusbar />
+        </BufferProvider>
+      </QueryClientProvider>
     </Root>
   );
 }

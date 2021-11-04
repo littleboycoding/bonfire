@@ -8,7 +8,7 @@ export const EXAMPLE_BUFFERS = [
   },
   {
     path: "main_scene",
-    type: "scene",
+    type: "scenes",
   },
   {
     path: "main.js",
@@ -26,8 +26,8 @@ const DEFAULT = {
 const BufferContext = createContext(DEFAULT);
 
 function BufferProvider({ children }) {
-  const [buffers, setBuffer] = useState(EXAMPLE_BUFFERS);
-  const [focusPath, setFocusPath] = useState(EXAMPLE_BUFFERS[1].path);
+  const [buffers, setBuffer] = useState([]);
+  const [focusPath, setFocusPath] = useState([]);
 
   const bufferData = {
     buffers,
