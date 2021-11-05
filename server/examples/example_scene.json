@@ -1,0 +1,16 @@
+{
+	"name": "main_scene",
+	"type": "scene",
+	"metadata": {
+		"object_creation": [
+			{
+				"name": "player",
+				"position": {
+					"x": 100,
+					"y": 100
+				}
+			}
+		],
+		"script": "main_script.js"
+	}
+}
