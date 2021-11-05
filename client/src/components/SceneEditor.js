@@ -1,6 +1,6 @@
 import styled from "styled-components/macro";
 import { useState, useEffect, useRef } from "react";
-import useWebSocket, { ReadyState } from "react-use-websocket";
+import useWebSocket from "../hook/websocket";
 import useBuffer from "../hook/buffer";
 
 const SceneEditor = styled.div`
@@ -80,8 +80,6 @@ function render(canvas, object, scale, viewport, focusObj) {
   }
 }
 
-const num = Math.floor(Math.random() * 100);
-
 // Internal logic and even handler
 function useScene() {
   const { focusPath } = useBuffer();
@@ -92,9 +90,7 @@ function useScene() {
   const [focusObj, setFocusObj] = useState(null);
   const [object, setObject] = useState(EXAMPLE_OBJECT);
 
-  const { sendJsonMessage, lastJsonMessage } = useWebSocket(
-    "ws://localhost:8080/ws?name=__Test" + num
-  );
+  const { sendJsonMessage, lastJsonMessage} = useWebSocket();
 
   useEffect(() => {
     const canvas = canvasRef.current;

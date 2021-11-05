@@ -1,8 +1,9 @@
 import styled from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircle } from "@fortawesome/free-solid-svg-icons";
+import useWebSocket from "../hook/websocket";
 
-const GITHUB_URL = "https://github.com/littleboycoding/bonfire"
+const GITHUB_URL = "https://github.com/littleboycoding/bonfire";
 
 const Statusbar = styled.div`
   background-color: white;
@@ -14,11 +15,17 @@ const Statusbar = styled.div`
   align-items: center;
 `;
 
-const Circle = styled(FontAwesomeIcon).attrs(() => ({
-  icon: faCircle,
-}))`
+const Circle = styled.span`
   color: ${({ online }) => (online ? "green" : "red")}};
 `;
+
+function CircleStyled({ online }) {
+  return (
+    <Circle online={online}>
+      <FontAwesomeIcon icon={faCircle} />
+    </Circle>
+  );
+}
 
 const ConnectionStatus = styled.span`
   display: flex;
@@ -26,10 +33,12 @@ const ConnectionStatus = styled.span`
 `;
 
 function ConnectionStatusStyled() {
+  const { readyState } = useWebSocket();
+
   return (
     <ConnectionStatus>
-      <Circle online={true} />
-      Connected
+      <CircleStyled online={readyState === 1} />
+      {readyState === 1 ? "Connected" : "Disconnected"}
     </ConnectionStatus>
   );
 }

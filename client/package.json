@@ -17,6 +17,7 @@
     "react-query": "^3.31.0",
     "react-scripts": "4.0.3",
     "react-use-websocket": "^2.9.1",
+    "sql.js": "^1.6.2",
     "styled-components": "^5.3.3",
     "web-vitals": "^1.1.2"
   },

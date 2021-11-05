@@ -19,6 +19,7 @@ const Tabbar = styled.div`
 const Tab = styled.div`
   min-width: 100px;
   background-color: ${({ selected }) => (selected ? "#E4E4E4" : "white")};
+  white-space: nowrap;
 
   &:hover {
     background-color: #d4d4d4;

@@ -5,6 +5,7 @@ import { useQuery } from "react-query";
 
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
+import { getContent } from "../api/api"
 
 const CodeEditor = styled(CodeMirror)`
   grid-area: editor;
@@ -12,22 +13,19 @@ const CodeEditor = styled(CodeMirror)`
   font-size: 14px;
 `;
 
-function apiFetcher({ queryKey }) {
-  return fetch(`http://localhost:8080/api/${queryKey[0]}/${queryKey[1]}`).then((res) =>
-    res.text()
-  );
-}
-
 function CodeEditorStyled() {
-  const { buffers, focusPath } = useBuffer();
+  const { focusPath } = useBuffer();
   const [code, setCode] = useState("");
-  const buffer = buffers.find((buf) => buf.path === focusPath);
 
-  const { isLoading, error } = useQuery([buffer.type, focusPath], apiFetcher, {
-    onSuccess(data) {
-      setCode(data);
-    },
-  });
+  const { isLoading, error } = useQuery(
+    ["ASSET_CONTENT", focusPath],
+    getContent,
+    {
+      onSuccess(data) {
+        setCode(data);
+      },
+    }
+  );
 
   if (isLoading) return "…";
   if (error) return error;
