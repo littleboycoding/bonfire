@@ -7,13 +7,13 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetDb() *gorm.DB {
+func Init() *gorm.DB {
 	db, err := gorm.Open(sqlite.Open("./data/db.sqlite"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect database")
 	}
 
-	db.AutoMigrate(&Object{}, &Scene{}, &Animation{}, &Create{})
+	db.AutoMigrate(&Assets{}, &Object{}, &Scene{}, &Animation{}, &Create{})
 
 	return db
 }

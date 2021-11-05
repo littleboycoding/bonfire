@@ -2,69 +2,111 @@ package route
 
 import (
 	"fmt"
+	"io"
+
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/julienschmidt/httprouter"
-
 	"encoding/json"
+	// "github.com/gabriel-vasile/mimetype"
+	"github.com/julienschmidt/httprouter"
+	"github.com/littleboycoding/bonfire/server/pkg/db"
+	"gorm.io/gorm"
 )
 
-func Json(w http.ResponseWriter, b []byte) {
-	w.Header().Add("Content-Type", "application/json")
-	// DEVELOPMENT ONLY
-	w.Header().Add("Access-Control-Allow-Origin", "http://localhost:3000")
-	fmt.Fprint(w, string(b))
+type Route struct {
+	Subscription *Subscription
+	DB           *gorm.DB
 }
 
-func App(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+type File struct {
+	Filename string
+	Mimetype string
+}
+
+func (route *Route) App(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	http.Redirect(w, r, "http://192.168.1.56:3000", http.StatusTemporaryRedirect)
 }
 
-func getResources(t string) []byte {
-	dirs, err := os.ReadDir("./data/" + t)
+func (route *Route) Upload(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	asset, header, err := r.FormFile("asset")
+	defer asset.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Error getting uploaded file", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("error"))
+		return
 	}
-
-	var newDir []string
-
-	for _, dir := range dirs {
-		if !dir.IsDir() {
-			newDir = append(newDir, dir.Name())
-		}
-	}
-
-	b, err := json.Marshal(newDir)
+	b, err := io.ReadAll(asset)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Error reading file", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error"))
+		return
 	}
-
-	return b
+	if err := os.WriteFile("./data/assets/"+header.Filename, b, 0777); err != nil {
+		log.Println("Error reading file", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error"))
+		return
+	}
+	a := db.Assets{Name: header.Filename, Mimetype: header.Header.Get("Content-Type")}
+	route.DB.Create(&a)
+	route.Subscription.BroadcastAll("CREATE_ASSET", a)
+	w.Write([]byte("ok"))
 }
 
-func getFiles(t string, f string) []byte {
-	file, _ := os.ReadFile("./data/" + t + "/" + f)
+func (route *Route) Assets(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var assets []db.Assets
+	route.DB.Find(&assets)
 
-	return file
+	files := []File{}
+
+	for i := range assets {
+		files = append(files, File{Filename: assets[i].Name, Mimetype: assets[i].Mimetype})
+	}
+
+	b, err := json.Marshal(files)
+	if err != nil {
+		log.Fatal("Error marshaling json", err)
+	}
+
+	fmt.Fprintln(w, string(b))
 }
 
-func Api(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	t := ps.ByName("type")
-	f := ps.ByName("file")
+// func (route *Route) Objects(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// 	var scenes []db.Scene
+// 	route.DB.Find(&scenes)
 
-	switch t {
-	case "assets":
-	case "scenes":
-		if f != "" {
-			b := getFiles(t, f)
-			Json(w, b)
-		} else {
-			b := getResources(t)
-			Json(w, b)
-		}
-	default:
-		fmt.Fprintf(w, "Unknown resources `%s`", t)
+// 	scene := []string{}
+
+// 	for i := range scenes {
+// 		scene = append(scene, scenes[i].Name)
+// 	}
+
+// 	b, err := json.Marshal(scene)
+// 	if err != nil {
+// 		log.Fatal("Error marshaling json", err)
+// 	}
+
+// 	fmt.Fprintln(w, string(b))
+// }
+
+func (route *Route) Scenes(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var scenes []db.Scene
+	route.DB.Find(&scenes)
+
+	scene := []string{}
+
+	for i := range scenes {
+		scene = append(scene, scenes[i].Name)
 	}
+
+	b, err := json.Marshal(scene)
+	if err != nil {
+		log.Fatal("Error marshaling json", err)
+	}
+
+	fmt.Fprintln(w, string(b))
 }

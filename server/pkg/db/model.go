@@ -2,6 +2,12 @@ package db
 
 import "gorm.io/gorm"
 
+type Assets struct {
+	gorm.Model
+	Name string
+	Mimetype string
+}
+
 // Object
 type Object struct {
 	gorm.Model

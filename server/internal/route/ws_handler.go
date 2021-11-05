@@ -94,25 +94,6 @@ func writeError(error string, w http.ResponseWriter) {
 	w.Write(b)
 }
 
-func InitializedWS(s *Subscription) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		q := r.URL.Query()
-		if !q.Has("name") {
-			writeError("Name is missing from query parameters", w)
-			return
-		}
-		name := q.Get("name")
-
-		client, err := s.Join(name, w, r)
-		if err != nil {
-			writeError(err.Error(), w)
-			return
-		}
-
-		createHandler(client, s, w, r)(w, r)
-	}
-}
-
 func createHandler(c *Client, s *Subscription, w http.ResponseWriter, r *http.Request) http.HandlerFunc {
 	f := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		go func() {
@@ -148,3 +129,21 @@ func createHandler(c *Client, s *Subscription, w http.ResponseWriter, r *http.Re
 
 	return f
 }
+
+func (route *Route) InitializedWS(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	q := r.URL.Query()
+	if !q.Has("name") {
+		writeError("Name is missing from query parameters", w)
+		return
+	}
+	name := q.Get("name")
+
+	client, err := route.Subscription.Join(name, w, r)
+	if err != nil {
+		writeError(err.Error(), w)
+		return
+	}
+
+	createHandler(client, route.Subscription, w, r)(w, r)
+}
+

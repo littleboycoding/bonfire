@@ -8,8 +8,17 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/littleboycoding/bonfire/server/internal/route"
-	gorm "github.com/littleboycoding/bonfire/server/pkg/db"
+	"github.com/littleboycoding/bonfire/server/pkg/db"
 )
+
+type CustomRouter struct {
+	router *httprouter.Router
+}
+
+func (h CustomRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	h.router.ServeHTTP(w, r)
+}
 
 func main() {
 	_, err := os.ReadDir("./data")
@@ -19,16 +28,19 @@ func main() {
 
 	router := httprouter.New()
 
-	sub := route.Subscription{}
+	r := route.Route{
+		DB: db.Init(),
+		Subscription: &route.Subscription{},
+	}
 
-	// router.GET("/api/:type", route.Api)
-	// router.GET("/api/:type/:file", route.Api)
-	router.ServeFiles("/assets/*filepath", http.Dir("./data"))
-	router.GET("/", route.App)
-	router.GET("/ws", route.InitializedWS(&sub))
+	router.GET("/", r.App)
+	router.GET("/ws", r.InitializedWS)
+	router.GET("/assets", r.Assets)
+	router.GET("/scenes", r.Scenes)
 
-	gorm.GetDb()
+	router.ServeFiles("/resources/*filepath", http.Dir("./data"))
+	router.POST("/upload", r.Upload)
 
 	log.Println("Server started listening on http://localhost:8080 🔥")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":8080", CustomRouter{router: router}))
 }
