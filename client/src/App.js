@@ -1,15 +1,14 @@
 import styled from "styled-components/macro";
+import { QueryClientProvider, QueryClient } from "react-query";
 
 import Statusbar from "./components/Statusbar";
 import Sidebar from "./components/Sidebar";
 import Tabbar from "./components/Tabbar";
 import Editor from "./components/Editor";
 
-import { QueryClientProvider, QueryClient } from "react-query";
 
 import { BufferProvider } from "./context/buffer";
 import { WebSocketProvider } from "./context/websocket";
-// import { SqliteProvider } from "./context/sqlite";
 
 const client = new QueryClient();
 
@@ -27,14 +26,22 @@ const Root = styled.div`
 
 function App() {
   return (
+    <>
+      <Tabbar />
+      <Editor />
+      <Sidebar />
+      <Statusbar />
+    </>
+  );
+}
+
+function RootStyled() {
+  return (
     <Root>
       <WebSocketProvider>
         <QueryClientProvider client={client}>
           <BufferProvider>
-            <Tabbar />
-            <Editor />
-            <Sidebar />
-            <Statusbar />
+            <App />
           </BufferProvider>
         </QueryClientProvider>
       </WebSocketProvider>
@@ -42,4 +49,4 @@ function App() {
   );
 }
 
-export default App;
+export default RootStyled;

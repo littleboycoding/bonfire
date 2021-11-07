@@ -1,17 +1,22 @@
 import styled from "styled-components/macro";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBox,
   faLayerGroup,
   faFile,
   faPlus,
+  faUpload,
   faRunning,
+  faImage,
+  faVideo,
 } from "@fortawesome/free-solid-svg-icons";
-import { useQuery, useQueryClient } from "react-query";
+import { useQuery } from "react-query";
 import useBuffer from "../hook/buffer";
 import useWebSocket from "../hook/websocket";
-import { getAssets, getScenes, uploadAsset } from "../api/api";
+import { uploadAsset, getResources } from "../api/api";
+
+import { ASSETS, OBJECTS, SCENES } from "../store_constant";
 
 const Sidebar = styled.div`
   background-color: white;
@@ -60,37 +65,28 @@ const Item = styled.span`
   }
 `;
 
+function getIconFromMimetype(mimetype) {
+  const photo = new RegExp(/video\/.*$/);
+  const image = new RegExp(/image\/.*$/);
+
+  if (photo.exec(mimetype)) return faVideo;
+  if (image.exec(mimetype)) return faImage;
+  return faFile;
+}
+
 function ListStyled({ focus }) {
   const { addBuffer } = useBuffer();
-  const client = useQueryClient();
-  const data = client.getQueryData(focus);
-  const { lastJsonMessage } = useWebSocket();
+  const { sendJsonMessage } = useWebSocket();
   const fileRef = useRef();
+  const { data: items } = useQuery([focus], () => getResources(focus));
 
-  useEffect(() => {
-    if (lastJsonMessage?.event === "CREATE_ASSET") {
-      client.setQueryData("ASSETS", (assets) => {
-        for (let i = 0; i < assets?.length; i++) {
-          if (assets[i].Name === lastJsonMessage.data.Name) {
-            return assets;
-          }
-        }
-
-        const newAssets = [
-          ...assets,
-          {
-            Filename: lastJsonMessage.data.Name,
-            Mimetype: lastJsonMessage.data.Mimetype,
-          },
-        ];
-
-        return newAssets;
-      });
-    }
-  }, [lastJsonMessage, client]);
-
-  const createNew = () => {
+  const upload = () => {
     fileRef.current.click();
+  };
+
+  const create = () => {
+    const fileName = window.prompt("Enter name");
+    if (fileName) sendJsonMessage({ event: "CREATE_ASSET", data: fileName });
   };
 
   const onFileChange = async ({
@@ -105,50 +101,45 @@ function ListStyled({ focus }) {
 
   return (
     <List>
-      {data?.length > 0 &&
-        data.map((asset) => (
-          <Item
-            onClick={() => addBuffer(asset.Filename, focus)}
-            key={asset.Filename}
-          >
-            <FontAwesomeIcon icon={faFile} /> {asset.Filename}
+      {items?.length > 0 &&
+        items.map((item) => (
+          <Item onClick={() => addBuffer(item.name, focus)} key={item.name}>
+            <FontAwesomeIcon icon={getIconFromMimetype(item.mimetype)} />{" "}
+            {item.name}
           </Item>
         ))}
-      <Item onClick={createNew}>
+      {focus === ASSETS && (
+        <Item onClick={upload}>
+          <FontAwesomeIcon icon={faUpload} /> Upload asset
+          <input
+            type="file"
+            ref={fileRef}
+            style={{ display: "none" }}
+            onChange={onFileChange}
+          />
+        </Item>
+      )}
+      <Item onClick={create}>
         <FontAwesomeIcon icon={faPlus} /> Create new
-        <input
-          type="file"
-          ref={fileRef}
-          style={{ display: "none" }}
-          onChange={onFileChange}
-        />
       </Item>
     </List>
   );
 }
 
-function CategoryStyled({ onSelect, title, selected, icon, focus, items }) {
+function CategoryStyled({ onSelect, title, selected, icon, focus }) {
   return (
     <Category selected={selected} onClick={onSelect}>
       <div className="title">
         <FontAwesomeIcon icon={icon} />
         {title}
       </div>
-      {selected && <ListStyled focus={focus} items={items} />}
+      {selected && <ListStyled focus={focus} />}
     </Category>
   );
 }
 
-const ASSETS = "ASSETS";
-const SCENES = "SCENES";
-const OBJECTS = "OBJECTS";
-
 function SidebarStyled() {
   const [focus, setFocus] = useState(ASSETS);
-  const { isLoading: isAssetsLoading } = useQuery(ASSETS, getAssets);
-  const { isLoading: isScenesLoading } = useQuery(SCENES, getScenes);
-
-  if (isAssetsLoading || isScenesLoading) return null;
 
   const onSelect = (category) => {
     setFocus(category);

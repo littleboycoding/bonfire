@@ -1,11 +1,15 @@
 import styled from "styled-components/macro";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import useBuffer from "../hook/buffer";
 import { useQuery } from "react-query";
 
-import CodeMirror from "@uiw/react-codemirror";
+import CodeMirror, { useCodeMirror } from "@uiw/react-codemirror";
+import MonacoEditor from "@uiw/react-monacoeditor";
 import { javascript } from "@codemirror/lang-javascript";
-import { getContent } from "../api/api"
+import { getAssetsContent } from "../api/api";
+
+import { ASSETS_CONTENT } from "../store_constant";
+import useWebSocket from "../hook/websocket";
 
 const CodeEditor = styled(CodeMirror)`
   grid-area: editor;
@@ -14,33 +18,42 @@ const CodeEditor = styled(CodeMirror)`
 `;
 
 function CodeEditorStyled() {
-  const { focusPath } = useBuffer();
+  const { focusPath, closeBuffer } = useBuffer();
   const [code, setCode] = useState("");
+  const { sendJsonMessage } = useWebSocket();
 
-  const { isLoading, error } = useQuery(
-    ["ASSET_CONTENT", focusPath],
-    getContent,
+  const { isLoading } = useQuery(
+    [ASSETS_CONTENT, focusPath],
+    getAssetsContent,
     {
       onSuccess(data) {
         setCode(data);
+      },
+      onError() {
+        closeBuffer(focusPath);
       },
     }
   );
 
   if (isLoading) return "…";
-  if (error) return error;
 
-  const onCodeChange = (code) => {
+  const onCodeChange = (code, e) => {
+    console.log(code, e);
+
+    sendJsonMessage({
+      event: "INSERTED_CHAR",
+      data: { row: 10, column: 10, char: "a" },
+    });
     setCode(code);
   };
 
   return (
-    <CodeEditor
+    <MonacoEditor
       height="100%"
-      extensions={[javascript()]}
+      language="typescript"
       value={code}
-      onChange={onCodeChange}
-    ></CodeEditor>
+      // onChange={onCodeChange}
+    ></MonacoEditor>
   );
 }
 
