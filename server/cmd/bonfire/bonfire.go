@@ -7,7 +7,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/littleboycoding/bonfire/server/internal/route"
+	"github.com/littleboycoding/bonfire/server/internal/handler"
 	"github.com/littleboycoding/bonfire/server/pkg/db"
 )
 
@@ -28,15 +28,18 @@ func main() {
 
 	router := httprouter.New()
 
-	r := route.Route{
-		DB: db.Init(),
-		Subscription: &route.Subscription{},
+	DB := db.Init()
+	r := handler.Handler{
+		DB:    DB,
+		Relay: &handler.Relay{DB: DB},
 	}
 
 	router.GET("/", r.App)
-	router.GET("/ws", r.InitializedWS)
+	router.GET("/ws", r.Subscription)
+
 	router.GET("/assets", r.Assets)
 	router.GET("/scenes", r.Scenes)
+	router.GET("/objects", r.Objects)
 
 	router.ServeFiles("/resources/*filepath", http.Dir("./data"))
 	router.POST("/upload", r.Upload)

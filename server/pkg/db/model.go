@@ -4,14 +4,16 @@ import "gorm.io/gorm"
 
 type Assets struct {
 	gorm.Model
-	Name string
+	Name     string
 	Mimetype string
 }
 
 // Object
 type Object struct {
 	gorm.Model
-	File      string
+	Name      string
+	Assets    Assets
+	AssetsID  int
 	FrameSize float64
 }
 
@@ -26,7 +28,7 @@ type Animation struct {
 // Scene
 type Scene struct {
 	gorm.Model
-	Name     string
+	Name string
 }
 
 type Create struct {
