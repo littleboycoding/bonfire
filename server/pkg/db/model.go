@@ -4,28 +4,26 @@ import "gorm.io/gorm"
 
 type Assets struct {
 	gorm.Model
-	Name     string
-	Mimetype string
+	Name string `json:"name"`
 }
 
-// Object
 type Object struct {
 	gorm.Model
-	Name      string
-	Assets    Assets
-	AssetsID  int
-	FrameSize float64
+	Name        string      `json:"name"`
+	AssetName   string      `json:"assetName"`
+	Animations  []Animation `json:"animations"`
+	FrameWidth  float64     `json:"frameWidth"`
+	FrameHeight float64     `json:"frameHeight"`
+	Variables   string      `json:"variables"`
 }
 
 type Animation struct {
 	gorm.Model
-	Name     string
-	Frames   string // "1,2,3" parse to array[1,2,3]
-	Object   Object
+	Name     string `json:"name"`
+	Frames   string `json:"frames"`
 	ObjectID int
 }
 
-// Scene
 type Scene struct {
 	gorm.Model
 	Name string

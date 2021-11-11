@@ -1,8 +1,7 @@
 package handler
 
 type Asset struct {
-	Name     string `json:"name"`
-	Mimetype string `json:"mimetype"`
+	Name string `json:"name"`
 }
 
 type Object struct {

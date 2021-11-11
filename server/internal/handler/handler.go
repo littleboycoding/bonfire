@@ -62,9 +62,9 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		writeError("error writing file", w)
 		return
 	}
-	a := db.Assets{Name: header.Filename, Mimetype: header.Header.Get("Content-Type")}
+	a := db.Assets{Name: header.Filename}
 	h.DB.Create(&a)
-	h.Relay.BroadcastAll("UPDATE_RESOURCES", UpdateEvent{Key: "ASSETS", Item: Asset{a.Name, a.Mimetype}})
+	h.Relay.BroadcastAll("CREATE_RESOURCE", ResourceOperation{a.Name, ASSETS, nil})
 	e := Event{"Status", "OK"}
 	w.Write(e.Json())
 }
@@ -76,7 +76,7 @@ func (h *Handler) Assets(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	files := []Asset{}
 
 	for i := range assets {
-		files = append(files, Asset{assets[i].Name, assets[i].Mimetype})
+		files = append(files, Asset{assets[i].Name})
 	}
 
 	b, err := json.Marshal(files)
@@ -98,6 +98,27 @@ func (h *Handler) Objects(w http.ResponseWriter, r *http.Request, _ httprouter.P
 	}
 
 	b, err := json.Marshal(objs)
+	if err != nil {
+		log.Fatal("Error marshaling json", err)
+	}
+
+	fmt.Fprintln(w, string(b))
+}
+
+func (h *Handler) Object(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	name := ps.ByName("name")
+
+	var object db.Object
+	h.DB.Where("objects.name = ?", name).Find(&object)
+
+	var animations []db.Animation
+	h.DB.Model(&object).Order("ID desc").Association("Animations").Find(&animations)
+
+	b, err := json.Marshal(struct {
+		Object     db.Object      `json:"object"`
+		Animations []db.Animation `json:"animations"`
+	}{object, animations})
+
 	if err != nil {
 		log.Fatal("Error marshaling json", err)
 	}

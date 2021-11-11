@@ -17,6 +17,7 @@ type CustomRouter struct {
 
 func (h CustomRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Cache-Control", "no-cache")
 	h.router.ServeHTTP(w, r)
 }
 
@@ -40,6 +41,8 @@ func main() {
 	router.GET("/assets", r.Assets)
 	router.GET("/scenes", r.Scenes)
 	router.GET("/objects", r.Objects)
+
+	router.GET("/object/:name", r.Object)
 
 	router.ServeFiles("/resources/*filepath", http.Dir("./data"))
 	router.POST("/upload", r.Upload)

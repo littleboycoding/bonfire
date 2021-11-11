@@ -1,0 +1,3 @@
+function loop() {
+    return true;
+}
