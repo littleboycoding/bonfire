@@ -25,6 +25,23 @@ async function getObjects() {
   return fetch(`${URL}/objects`).then((res) => res.json());
 }
 
+async function getObject({ queryKey }) {
+  const key = queryKey[1];
+  const res = await fetch(`${URL}/object/${key}`);
+  const json = await res.json()
+
+  return json
+}
+
+async function getBitmap({ queryKey }) {
+  const key = queryKey[1];
+  const res = await fetch(`${URL}/resources/assets/${key}`);
+  const blob = await res.blob();
+  const obj = await createImageBitmap(blob);
+
+  return [blob, obj];
+}
+
 async function getAssetsContent({ queryKey }) {
   const res = await fetch(`${URL}/resources/assets/${queryKey[1]}`);
   if (res.status !== 200) {
@@ -45,6 +62,8 @@ export {
   getAssets,
   getScenes,
   getObjects,
+  getBitmap,
+  getObject,
   getResources,
   getAssetsContent,
   uploadAsset,

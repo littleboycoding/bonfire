@@ -3,6 +3,8 @@ import { useState, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBox,
+  faTrash,
+  faPenAlt,
   faLayerGroup,
   faFile,
   faPlus,
@@ -58,21 +60,32 @@ const Item = styled.span`
   display: flex;
   gap: 10px;
   color: #333;
+  justify-content: space-between;
+  align-items: flex-start;
 
   &:hover {
     cursor: pointer;
     text-decoration: underline;
   }
+
+  .tooltip {
+    opacity: 0.5;
+  }
+
+  &:hover .tooltip {
+    opacity: 1;
+  }
+
+  .tooltip svg:hover {
+    transform: scale(1.5);
+  }
+
+  & > span {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
 `;
-
-function getIconFromMimetype(mimetype) {
-  const photo = new RegExp(/video\/.*$/);
-  const image = new RegExp(/image\/.*$/);
-
-  if (photo.exec(mimetype)) return faVideo;
-  if (image.exec(mimetype)) return faImage;
-  return faFile;
-}
 
 function ListStyled({ focus }) {
   const { addBuffer } = useBuffer();
@@ -85,8 +98,12 @@ function ListStyled({ focus }) {
   };
 
   const create = () => {
-    const fileName = window.prompt("Enter name");
-    if (fileName) sendJsonMessage({ event: "CREATE_ASSET", data: fileName });
+    const name = window.prompt("Enter name");
+    if (name)
+      sendJsonMessage({
+        event: "CREATE_RESOURCE",
+        data: { name, resource: focus },
+      });
   };
 
   const onFileChange = async ({
@@ -99,28 +116,63 @@ function ListStyled({ focus }) {
     uploadAsset(formData);
   };
 
+  const deletion = async (name) => {
+    const confirm = window.confirm("Delete comfirmation");
+    if (confirm)
+      sendJsonMessage({
+        event: "DELETE_RESOURCE",
+        data: { name, resource: focus },
+      });
+  };
+
+  const rename = async (name) => {
+    const newName = window.prompt("Enter new name");
+    if (newName)
+      sendJsonMessage({
+        event: "RENAME_RESOURCE",
+        data: { name, resource: focus, info: { newName: newName } },
+      });
+  };
+
   return (
     <List>
       {items?.length > 0 &&
         items.map((item) => (
-          <Item onClick={() => addBuffer(item.name, focus)} key={item.name}>
-            <FontAwesomeIcon icon={getIconFromMimetype(item.mimetype)} />{" "}
-            {item.name}
+          <Item key={item.name}>
+            <span onClick={() => addBuffer(item.name, focus)}>
+              <FontAwesomeIcon icon={faFile} />{" "}
+              {item.name}
+            </span>
+            <span className="tooltip">
+              <FontAwesomeIcon
+                onClick={() => rename(item.name)}
+                icon={faPenAlt}
+              />
+              <FontAwesomeIcon
+                icon={faTrash}
+                onClick={() => deletion(item.name)}
+                style={{ color: "#800" }}
+              />
+            </span>
           </Item>
         ))}
       {focus === ASSETS && (
         <Item onClick={upload}>
-          <FontAwesomeIcon icon={faUpload} /> Upload asset
-          <input
-            type="file"
-            ref={fileRef}
-            style={{ display: "none" }}
-            onChange={onFileChange}
-          />
+          <span>
+            <FontAwesomeIcon icon={faUpload} /> Upload asset
+            <input
+              type="file"
+              ref={fileRef}
+              style={{ display: "none" }}
+              onChange={onFileChange}
+            />
+          </span>
         </Item>
       )}
       <Item onClick={create}>
-        <FontAwesomeIcon icon={faPlus} /> Create new
+        <span>
+          <FontAwesomeIcon icon={faPlus} /> Create new
+        </span>
       </Item>
     </List>
   );

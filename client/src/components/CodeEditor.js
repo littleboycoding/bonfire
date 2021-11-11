@@ -1,21 +1,12 @@
-import styled from "styled-components/macro";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import useBuffer from "../hook/buffer";
 import { useQuery } from "react-query";
 
-import CodeMirror, { useCodeMirror } from "@uiw/react-codemirror";
-import MonacoEditor from "@uiw/react-monacoeditor";
-import { javascript } from "@codemirror/lang-javascript";
+import MonacoEditor from "@monaco-editor/react";
 import { getAssetsContent } from "../api/api";
 
 import { ASSETS_CONTENT } from "../store_constant";
 import useWebSocket from "../hook/websocket";
-
-const CodeEditor = styled(CodeMirror)`
-  grid-area: editor;
-  overflow: auto;
-  font-size: 14px;
-`;
 
 function CodeEditorStyled() {
   const { focusPath, closeBuffer } = useBuffer();
@@ -37,13 +28,21 @@ function CodeEditorStyled() {
 
   if (isLoading) return "…";
 
-  const onCodeChange = (code, e) => {
-    console.log(code, e);
-
+  const onCodeChange = (code) => {
     sendJsonMessage({
-      event: "INSERTED_CHAR",
-      data: { row: 10, column: 10, char: "a" },
+      event: "UPDATE_ASSET",
+      data: {
+        name: focusPath,
+        text: code,
+      },
     });
+    // sendJsonMessage({
+    //   event: "INSERT_CHAR",
+    //   data: {
+    //     key: focusPath,
+    //     changes: e.changes.map(({ range, text }) => ({ range, text })),
+    //   },
+    // });
     setCode(code);
   };
 
@@ -52,7 +51,7 @@ function CodeEditorStyled() {
       height="100%"
       language="typescript"
       value={code}
-      // onChange={onCodeChange}
+      onChange={onCodeChange}
     ></MonacoEditor>
   );
 }

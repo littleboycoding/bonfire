@@ -6,7 +6,6 @@ import Sidebar from "./components/Sidebar";
 import Tabbar from "./components/Tabbar";
 import Editor from "./components/Editor";
 
-
 import { BufferProvider } from "./context/buffer";
 import { WebSocketProvider } from "./context/websocket";
 
@@ -38,13 +37,13 @@ function App() {
 function RootStyled() {
   return (
     <Root>
-      <WebSocketProvider>
-        <QueryClientProvider client={client}>
+      <QueryClientProvider client={client}>
+        <WebSocketProvider>
           <BufferProvider>
             <App />
           </BufferProvider>
-        </QueryClientProvider>
-      </WebSocketProvider>
+        </WebSocketProvider>
+      </QueryClientProvider>
     </Root>
   );
 }

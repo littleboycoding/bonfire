@@ -1,5 +1,6 @@
 import SceneEditor from "./SceneEditor";
 import CodeEditor from "./CodeEditor";
+import ObjectEditor from "./ObjectEditor";
 import useBuffer from "../hook/buffer";
 
 function EditorStyled() {
@@ -11,6 +12,7 @@ function EditorStyled() {
 
   if (buffer.type === "SCENES") return <SceneEditor />;
   if (buffer.type === "ASSETS") return <CodeEditor />;
+  if (buffer.type === "OBJECTS") return <ObjectEditor />;
 
   return null;
 }
